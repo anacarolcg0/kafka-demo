@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class KafkaMessageProducer {
     private static final Logger log = LoggerFactory.getLogger(KafkaMessageProducer.class);
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate; // chave e valor
     private final String topicName;
 
     public KafkaMessageProducer(KafkaTemplate<String, String> kafkaTemplate,
@@ -21,36 +21,37 @@ public class KafkaMessageProducer {
         this.topicName = topicName;
     }
 
-    public void sendMesage(String message) {
+    public void sendMessage(String message) {
         log.info("Enviando mensagem: '{}' para o tópico '{}'", message, topicName);
+        // Envio assíncrono. Retorna um CompletableFuture
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, message);
-        future.whenComplete((result, ex) -> {
+        future.whenComplete((result,ex) -> {
             if (ex == null) {
-                log.info("Mensagem enviada com sucesso para o tópico '{}' particao '{}' com offset '{}'",
+                log.info("Mensagem enviada com sucesso para o tópico '{}' partição '{}' com offset '{}'",
                         result.getRecordMetadata().topic(),
                         result.getRecordMetadata().partition(),
                         result.getRecordMetadata().offset());
             } else {
-                log.error("Faha ao enviar mensagem para o tópico '{}': '{}'", topicName, ex.getMessage());
+                log.error("Falha ao enviar mensagem para o tópico '{}': {}", topicName, ex.getMessage());
             }
         });
     }
 
-    public void sendMesageWithKey(String message, String key) {
-        log.info("Enviando mensagem: '{}' com a chabe '{}' para o tópico '{}'", message, key, topicName);
+    public void sendMessageWithKey(String key, String message) {
+        log.info("Enviando mensagem: '{}' com chave '{}' para o tópico '{}'", message, key, topicName);
+        // Envio assíncrono. Retorna um CompletableFuture
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, key, message);
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.info("Mensagem com chave '{}' enviada com sucesso para o tópico '{}' particao '{}' com offset '{}'",
+                log.info("Mensagem com chave '{}' enviada com sucesso para o tópico '{}' partição '{}' com offset '{}'",
                         key,
-                        // result.getRecordMetadata().key(),
+                        //result.getProducerRecord().key(),
                         result.getRecordMetadata().topic(),
                         result.getRecordMetadata().partition(),
                         result.getRecordMetadata().offset());
             } else {
-                log.error("Faha ao enviar mensagem com chave '{}' para o tópico '{}': '{}'", topicName, key, ex.getMessage());
+                log.error("Falha ao enviar mensagem com chave '{}' para o tópico '{}': {}", key, topicName, ex.getMessage());
             }
         });
     }
-
 }
